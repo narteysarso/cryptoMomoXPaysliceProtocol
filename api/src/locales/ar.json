@@ -37,9 +37,9 @@
 	"Saving options": "خيارات الحفظ",
 	"Deposit": "إيداع",
 	"Withdraw": "انسحب",
-	"Please register number":"",
-	"Successfull": "",
-	"Select out token":"",
-	"Bridge Token":"",
-	"Transfer Tokens": ""
+	"Please register number":"الرجاء تسجيل الرقم",
+	"Successfull": "ناجح",
+	"Select out token":"حدد رمزًا مميزًا",
+	"Bridge Token":"رمز الجسر",
+	"Transfer Tokens": "رموز التحويل"
 }

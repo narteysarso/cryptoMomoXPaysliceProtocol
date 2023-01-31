@@ -36,5 +36,10 @@
 	"Pending approvals": "Approbations en attente",
 	"Saving options": "Options d'enregistrement",
 	"Deposit": "Dépôt",
-	"Withdraw": "Retrait"
+	"Withdraw": "Retrait",
+    "Please register number":"Veuillez enregistrer le numéro",
+	"Successfull": "Réussi",
+	"Select out token":"Sélectionner le jeton",
+	"Bridge Token":"Jeton de pont",
+	"Transfer Tokens": "Transférer des jetons"
 }

@@ -36,5 +36,10 @@
 	"Pending approvals": "待批准",
 	"Saving options": "保存选项",
 	"Deposit": "入金",
-	"Withdraw": "取款"
+	"Withdraw": "取款",
+    "Please register number":"请登记号码",
+	"Successfull": "成功",
+	"Select out token":"选择出令牌",
+	"Bridge Token":"桥梁令牌",
+	"Transfer Tokens": "转移令牌"
 }

@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 
 const i18n = new I18n({
 
-  locales: ['ar', 'en', 'es', 'fr', 'ha', 'zn'],
+  locales: ['ar', 'en', 'es', 'fr', 'ha', 'hi', 'zn'],
 
   defaultLocale: 'en',
 

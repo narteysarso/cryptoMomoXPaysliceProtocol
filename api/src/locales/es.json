@@ -36,5 +36,10 @@
 	"Pending approvals": "Aprobaciones pendientes",
 	"Saving options": "Opciones de guardado",
 	"Deposit": "Depositar",
-	"Withdraw": "Retirar"
+	"Withdraw": "Retirar",
+    "Please register number":"Por favor registre el número",
+	"Successfull":"Exitoso",
+	"Select out token":"Seleccionar ficha",
+	"Bridge Token":"Ficha Puente",
+	"Transfer Tokens": "Transferir fichas"
 }
