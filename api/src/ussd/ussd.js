@@ -100,7 +100,11 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
         next: {
             "": async () => {
                 // const session = getSession(menu.args.sessionId);
-                const {lang} = await accountList.findLangByPhonenumber({ phonenumber: menu.args.phoneNumber });
+                const results = await accountList.findLangByPhonenumber({ phonenumber: menu.args.phoneNumber });
+
+                if(!results) return "selectLangauge"
+
+                const {lang} = results;
 
                 // dynamically switch to select langauge state or start start
                 if (!lang)
@@ -156,9 +160,79 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
 
         next: {
             '1': "transfer",
-            '2': 'swap',
+            '2': 'swap.selectToken',
             '3': 'finance',
             '4': 'wallet'
+        }
+    });
+
+    menu.state('swap.selectToken', {
+        run: async () => {
+            localeService.setLocale(await menu.session.get("lang") || "en");
+            menu.con(
+                localeService.translate('Select Token') + ':\n' + TOKENKEY.reduce((acc, val, idx) => acc + `${idx + 1}: ${val} \n`, "")
+            );
+        },
+        next: {
+            // using regex to match user input to next state
+            '*\\d': 'swap.enterAmount'
+        }
+    });
+
+    menu.state('swap.enterAmount', {
+        run: async () => {
+            localeService.setLocale(await menu.session.get("lang") || "en");
+            menu.con(localeService.translate('Enter amount'))
+        },
+        next: {
+            // using regex to match user input to next state
+            '*\\d+': 'swap.recipientToken'
+        }
+    });
+
+    menu.state('swap.recipientToken', {
+        run: async () => {
+            localeService.setLocale(await menu.session.get("lang") || "en");
+            menu.con(
+                localeService.translate('Select out token') + ':\n' + TOKENKEY.reduce((acc, val, idx) => acc + `${idx + 1}: ${val} \n`, "")
+            );
+        },
+        next: {
+            // using regex to match user input to next state
+            '*\\d': 'swap.enterAmount'
+        }
+    });
+
+    menu.state('swap.authenticate', authenticate("", "sendCrypto.amount", "sendCrypto.authenticateFailed"));
+    menu.state('swap.authenticateFailed', authenticate("Incorrect pin. Try again", "sendCrypto.amount", "sendCrypto.authenticateFailed"));
+
+    menu.state('swap.amount', {
+        run: async () => {
+            localeService.setLocale(await menu.session.get("lang") || "en");
+            const [, selectNumber, _amount, recipientPhonenumber] = menu.args.text.split("*");
+            const tokenKey = TOKENKEY[parseInt(selectNumber) - 1];
+            const token = TOKENS[tokenKey];
+
+            if (!token) menu.end(localeService.translate("Incorrect token specified"));
+
+            const amount = parseUnits(_amount, token.decimals)
+
+            const balance = await walletList.balanceOf({ phonenumber: menu.args.phoneNumber, token: token.address });
+
+            if (!balance.gt(amount)) menu.end(`${localeService.translate('Insufficient balance for')} ${tokenKey}`);
+
+            menu.end(localeService.translate("Transfer is processing"));
+
+            const results = await walletList.swapTo({
+                phonenumber: menu.args.phoneNumber.trim(),
+                fromToken: recipientPhonenumber.trim(),
+                toToken: token.address.trim(),
+                amountIn
+            })
+
+            if(!results) menu.end(localeService.translate("Swap failed"))
+
+            menu.end(localeService.translate("Swap successful"));
         }
     });
 
@@ -183,7 +257,7 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
                 return "createOrClaimAccount.firstname"
             },
             '2': 'getTokenBalance.selectToken',
-            '2': 'buyCrypto',
+            '3': 'buyCrypto',
             '4': 'getAccountWalletAddress',
             '5': 'wallet.pendingApprovals',
             '6': 'wallet.language'
@@ -472,6 +546,7 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
             '*\\d{4,}': () => {
                 
                 const [, , , , , , pin] = menu.args.text.split("*");
+                
                 console.log(pin, menu.val, pin !== menu.val)
                 if (pin !== menu.val) return "createOrClaimAccount.pinsDontMatch";
 
@@ -536,14 +611,14 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
         run: async () => {
             localeService.setLocale(await menu.session.get("lang") || "en");
             menu.end(localeService.translate('Account is registered successfully'));
-            console.log(menu.args.text.split("*"));
+            
             const [, , ,firstname, lastname, lang, pin,] = menu.args.text.split("*");
-            // console.log("inserting to database")
+
             const dbRes = await accountList.add({ pin, firstname, lastname, lang, phonenumber: menu.args.phoneNumber });
-            // console.log(dbRes);
+            console.log(dbRes);
             // console.log("inserting to blockchain")
             const walletRes = await walletList.createOrClaimWallet({ phonenumber: menu.args.phoneNumber });
-            // console.log(walletRes);
+            console.log(walletRes);
         }
     });
 

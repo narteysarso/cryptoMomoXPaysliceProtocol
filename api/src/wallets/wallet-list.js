@@ -1,6 +1,7 @@
+import { getAddress } from "ethers/lib/utils.js";
 import { TOKENS } from "../constants.js";
 import { InvalidPropertyError } from "../helpers/errors.js";
-import getWalletContract from "../helpers/getWalletContract.js";
+import {getWalletContract, getExchangeContract} from "../helpers/getWalletContract.js";
 import isValidPhonenumber from "../helpers/is-valid-phonenumber.js";
 import { parseUnits } from "../helpers/utils.js";
 
@@ -11,7 +12,7 @@ export default function makeWalletList() {
     const createOrClaimWallet = async ({
         phonenumber
     }) => {
-        const walletContract = getWalletContract();
+        const walletContract = await getWalletContract();
 
         if (!isValidPhonenumber(phonenumber)) throw new InvalidPropertyError(
             `Invalid phonenumber`
@@ -42,7 +43,7 @@ export default function makeWalletList() {
             `Invalid to phonenumber`
         );
 
-        const walletContract = getWalletContract();
+        const walletContract = await getWalletContract();
 
         const txn = await walletContract.safeTransferToAccount(
             fromPhonenumber,
@@ -76,7 +77,7 @@ export default function makeWalletList() {
             `Token is not support`
         );
 
-        const walletContract = getWalletContract();
+        const walletContract = await getWalletContract();
 
         const txn = await walletContract.transferToAddress(
             fromPhonenumber,
@@ -98,7 +99,7 @@ export default function makeWalletList() {
             `Invalid phonenumber`
         );
 
-        const walletContract = getWalletContract();
+        const walletContract = await getWalletContract();
 
         const result = await walletContract.addressOfPhonenumber(phonenumber);
 
@@ -112,7 +113,7 @@ export default function makeWalletList() {
             `Invalid phonenumber`
         );
 
-        const walletContract = getWalletContract();
+        const walletContract = await getWalletContract();
 
         const result = await walletContract.balanceOf(phonenumber, token);
 
@@ -129,11 +130,38 @@ export default function makeWalletList() {
             `Invalid phonenumber`
         );
 
-        const walletContract = getWalletContract();
+        const walletContract = await getWalletContract();
 
         const result = await walletContract.approve(phonenumber, recipientAddress, token, amount);
 
         return result;
+    }
+
+    const swapTo = async ({
+        phonenumber,
+        fromToken,
+        toToken,
+        amountIn,
+    }) => {
+        if (!isValidPhonenumber(phonenumber)) throw new InvalidPropertyError(
+            `Invalid phonenumber`
+        );
+
+        const walletContract = await getWalletContract();
+
+        const exchageContract = getExchangeContract();
+
+        const result = await walletContract.approve(phonenumber, exchangeAddress, fromToken, amountIn);
+
+        if(!result) return false;
+
+        const toAddress = await getWalletAddress({phonenumber});
+
+        if(!toAddress) return false;
+
+        const amountOut = await exchageContract.swapExactTokensForTokens(amountIn, 0, [fromToken, toToken], toAddress);
+
+        return amountOut;
     }
 
     const approvePhonenumber = async ({
@@ -149,7 +177,7 @@ export default function makeWalletList() {
         //     `Invalid recipient phonenumber`
         // );
 
-        const walletContract = getWalletContract();
+        const walletContract = await getWalletContract();
 
         const result = await walletContract.approve(phonenumber, recipientPhonenumber, token, amount);
 
@@ -163,6 +191,7 @@ export default function makeWalletList() {
         getWalletAddress,
         approveAddress,
         approvePhonenumber,
-        balanceOf
+        balanceOf,
+        swapTo
     })
 }

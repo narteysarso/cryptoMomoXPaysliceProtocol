@@ -1,5 +1,8 @@
-const ethers = require("ethers");
-require("dotenv").config({path: ".env.local"});
+import ethers from "ethers";
+import dotenv from "dotenv";
+import { CeloProvider, CeloWallet} from '@celo-tools/celo-ethers-wrapper'
+
+dotenv.config({path: ".env.local"});
 
 export const getSigner = () => {
     const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY);
@@ -10,21 +13,17 @@ export const getSigner = () => {
     );
 
     const signer = wallet.connect(provider);
-
-    console.log(signer.address)
+    
     return signer;
 }
 
-export const getCeloSigner = () => {
-    const wallet = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY);
+export const getCeloSigner = async () => {
 
-    const provider = new ethers.providers.AlchemyProvider(
-        "maticmum",
-        process.env.PROVIDER_KEY
-    );
+    const provider = new CeloProvider('https://alfajores-forno.celo-testnet.org');
 
-    const signer = wallet.connect(provider);
+    await provider.ready;
 
-    console.log(signer.address)
+    const signer = new CeloWallet(process.env.WALLET_PRIVATE_KEY, provider);
+
     return signer;
 }

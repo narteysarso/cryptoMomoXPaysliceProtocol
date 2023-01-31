@@ -39,7 +39,10 @@
 	"Withdraw": "Withdraw",
 	"Enter your first name": "Enter your first name",
 	"Enter your last name": "Enter your last name",
-	"Please register number":"Please register number",
-	"Successfull": "Successfull"
-
+	"Please register number": "Please register number",
+	"Successfull": "Successfull",
+	"Transfer Tokens": "Transfer Tokens",
+	"Bridge Token": "Bridge Token",
+	"Select out token": "Select out token",
+	"Enter your pin:": "Enter your pin:"
 }
