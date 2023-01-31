@@ -30,7 +30,7 @@ const tableland = async ({ signer }) => {
         await insert.txn.wait();
     }
 
-    const find = async ({ fields, query = "" }) => {
+    const find = async ({ fields = "*", query = "" }) => {
         let parsedFields = "*";
         if (typeof fields === "object" && fields?.length > 0) {
             parsedFields = fields.join(",");

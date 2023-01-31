@@ -12,13 +12,11 @@ export const getWalletContract = async () => {
    return contractWithSigner;
 }
 
-export const getExchangeContract = () => {
-    
-   const  contract = new ethers.Contract(exchangeAbi.address, exchangeAbi.abi);
+export const getExchangeContract = async () => {
 
-   const signer = getCeloSigner();
+   const signer = await getCeloSigner();
 
-   const contractWithSigner = contract.connect(signer);
+   const  contractWithSigner = new ethers.Contract(exchangeAbi.address, exchangeAbi.abi, signer);
 
    return contractWithSigner;
 }

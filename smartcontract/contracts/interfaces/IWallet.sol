@@ -26,4 +26,12 @@ interface IWallet {
         address token,
         uint amount
     ) external returns (bool);
+
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        address exchangeAddress
+    ) external returns (uint[] memory amounts);
 }

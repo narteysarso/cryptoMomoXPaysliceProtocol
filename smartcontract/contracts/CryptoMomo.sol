@@ -13,6 +13,7 @@ import "./interfaces/IWallet.sol";
 import "./proxies/Proxy.sol";
 import "./proxies/ProxyFactory.sol";
 
+
 error WalletAlreadyCreated();
 error WalletCreationFailed();
 error WalletDoesNotExists();
@@ -91,13 +92,25 @@ contract CryptoMomo is
             );
     }
 
-    function swap(
-        address inToken,
-        address outToken,
-        uint256 inAmount
-    ) external onlyOwner whenNotPaused {
-        
+    function swapExactTokensForTokens(
+        string calldata phonenumberOrUUID,
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        address exchangeAddress
+    ) external onlyOwner whenNotPaused returns (uint[] memory amounts) {
+        address wallet = addressOfPhonenumber(phonenumberOrUUID);
+        return
+            IWallet(wallet).swapExactTokensForTokens(
+                amountIn,
+                amountOutMin,
+                path,
+                to,
+                exchangeAddress
+            );
     }
+
     /**
      * Checks if an `addr` is a smartcontract or not
      * @param addr address to check

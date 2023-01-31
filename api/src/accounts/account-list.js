@@ -89,6 +89,8 @@ export default function makeAccountLists({database}){
     async function authenticate({phonenumber, pin}){
         const account = await findByPhonenumber({phonenumber});
 
+        console.log(account);
+        
         if(!account) throw Error("Account not found");
 
         const validity = await bcrypt.compare(pin, account.pin);

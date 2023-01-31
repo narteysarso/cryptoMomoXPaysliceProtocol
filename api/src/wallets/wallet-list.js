@@ -1,7 +1,7 @@
 import { getAddress } from "ethers/lib/utils.js";
 import { TOKENS } from "../constants.js";
 import { InvalidPropertyError } from "../helpers/errors.js";
-import {getWalletContract, getExchangeContract} from "../helpers/getWalletContract.js";
+import { getWalletContract, getExchangeContract } from "../helpers/getWalletContract.js";
 import isValidPhonenumber from "../helpers/is-valid-phonenumber.js";
 import { parseUnits } from "../helpers/utils.js";
 
@@ -132,7 +132,7 @@ export default function makeWalletList() {
 
         const walletContract = await getWalletContract();
 
-        const result = await walletContract.approve(phonenumber, recipientAddress, token, amount);
+        const result = await walletContract.approveAddress(phonenumber, recipientAddress, token, amount);
 
         return result;
     }
@@ -149,19 +149,28 @@ export default function makeWalletList() {
 
         const walletContract = await getWalletContract();
 
-        const exchageContract = getExchangeContract();
+        const exchageContract = await getExchangeContract();
 
-        const result = await walletContract.approve(phonenumber, exchangeAddress, fromToken, amountIn);
+        const approvalTxn = await walletContract.approveAddress(phonenumber, exchageContract.address, fromToken, amountIn);
 
-        if(!result) return false;
+        const approvalResults = await approvalTxn.wait();
 
-        const toAddress = await getWalletAddress({phonenumber});
+        // console.log(approvalResults);
+        
+        const toAddress = await getWalletAddress({ phonenumber });
 
-        if(!toAddress) return false;
+        // console.log(toAddress, exchageContract.address, fromToken, toToken, amountIn);
 
-        const amountOut = await exchageContract.swapExactTokensForTokens(amountIn, 0, [fromToken, toToken], toAddress);
+        const amountOut = await exchageContract.getAmountsOut(amountIn, [fromToken, toToken]);
 
-        return amountOut;
+        // console.log(amountIn, amountOut);
+
+        const swapTxn = await walletContract.swapExactTokensForTokens(phonenumber,amountIn, 0, [fromToken, toToken], toAddress, exchageContract.address, { gasLimit });
+
+        const amountSwapped = await swapTxn.wait();
+
+        return amountSwapped;
+        // return amountOut;
     }
 
     const approvePhonenumber = async ({

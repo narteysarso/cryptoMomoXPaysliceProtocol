@@ -5,6 +5,7 @@ pragma solidity >=0.8.15;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+import "../interfaces/IExchange.sol";
 
 error InvalidTokenAddress();
 error TransferFailed();
@@ -33,6 +34,22 @@ contract Wallet {
         }
         
         return IERC20(_token).approve(_recipient, amount);
+    }
+
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        address[] calldata path,
+        address to,
+        address exchangeAddress
+    ) external returns(uint[] memory amounts) {
+        return
+            IExchange(exchangeAddress).swapExactTokensForTokens(
+                amountIn,
+                amountOutMin,
+                path,
+                to
+            );
     }
 
     function withdrawToken(

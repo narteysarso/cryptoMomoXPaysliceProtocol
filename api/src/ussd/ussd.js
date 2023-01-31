@@ -160,13 +160,13 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
 
         next: {
             '1': "transfer",
-            '2': 'swap.selectToken',
+            '2': 'swap.selectFromToken',
             '3': 'finance',
             '4': 'wallet'
         }
     });
 
-    menu.state('swap.selectToken', {
+    menu.state('swap.selectFromToken', {
         run: async () => {
             localeService.setLocale(await menu.session.get("lang") || "en");
             menu.con(
@@ -186,11 +186,11 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
         },
         next: {
             // using regex to match user input to next state
-            '*\\d+': 'swap.recipientToken'
+            '*\\d+': 'swap.selectToToken'
         }
     });
 
-    menu.state('swap.recipientToken', {
+    menu.state('swap.selectToToken', {
         run: async () => {
             localeService.setLocale(await menu.session.get("lang") || "en");
             menu.con(
@@ -199,36 +199,42 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
         },
         next: {
             // using regex to match user input to next state
-            '*\\d': 'swap.enterAmount'
+            '*\\d': 'swap.authenticate'
         }
     });
 
-    menu.state('swap.authenticate', authenticate("", "sendCrypto.amount", "sendCrypto.authenticateFailed"));
-    menu.state('swap.authenticateFailed', authenticate("Incorrect pin. Try again", "sendCrypto.amount", "sendCrypto.authenticateFailed"));
+
+    menu.state('swap.authenticate', authenticate("Enter your pin", "swap.amount", "swap.authenticateFailed"));
+    menu.state('swap.authenticateFailed', authenticate("Incorrect pin. Try again", "swap.amount", "swap.authenticateFailed"));
 
     menu.state('swap.amount', {
         run: async () => {
             localeService.setLocale(await menu.session.get("lang") || "en");
-            const [, selectNumber, _amount, recipientPhonenumber] = menu.args.text.split("*");
-            const tokenKey = TOKENKEY[parseInt(selectNumber) - 1];
-            const token = TOKENS[tokenKey];
 
-            if (!token) menu.end(localeService.translate("Incorrect token specified"));
+            const [, fromTokenNumber, _amount, toTokenNumber ] = menu.args.text.split("*");
+            const toTokenKey = TOKENKEY[parseInt(toTokenNumber) - 1];
+            const fromTokenKey = TOKENKEY[parseInt(fromTokenNumber) - 1];
+            const toToken = TOKENS[toTokenKey];
+            const fromToken = TOKENS[fromTokenKey];
 
-            const amount = parseUnits(_amount, token.decimals)
+            if (!toToken || !fromToken) menu.end(localeService.translate("Incorrect token specified"));
 
-            const balance = await walletList.balanceOf({ phonenumber: menu.args.phoneNumber, token: token.address });
+            const amountIn = parseUnits(_amount, fromToken.decimals)
 
-            if (!balance.gt(amount)) menu.end(`${localeService.translate('Insufficient balance for')} ${tokenKey}`);
+            const balance = await walletList.balanceOf({ phonenumber: menu.args.phoneNumber, token: fromToken.address });
+            
+            if (!balance.gte(amountIn)) menu.end(`${localeService.translate('Insufficient balance for')} ${fromTokenKey}`);
 
             menu.end(localeService.translate("Transfer is processing"));
 
             const results = await walletList.swapTo({
-                phonenumber: menu.args.phoneNumber.trim(),
-                fromToken: recipientPhonenumber.trim(),
-                toToken: token.address.trim(),
+                phonenumber: menu.args.phoneNumber,
+                fromToken: fromToken.address,
+                toToken: toToken.address,
                 amountIn
             })
+
+            console.log(results);
 
             if(!results) menu.end(localeService.translate("Swap failed"))
 
@@ -334,7 +340,7 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
         }
     });
 
-    menu.state('savings.authenticate', authenticate("", "savings.save", "savings.authenticateFailed"));
+    menu.state('savings.authenticate', authenticate("Enter your pin", "savings.save", "savings.authenticateFailed"));
     menu.state('savings.authenticateFailed', authenticate("Incorrect pin. Try again", "savings.save", "savings.authenticateFailed"));
 
     menu.state("savings.save", {
@@ -416,21 +422,24 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
         next: {
             // using regex to match user input to next state
             '*\\+\\d{1,3}\\d{9}': async () => {
-                const [, , , phonenumber] = menu.args.text.split("*");
+                
+                const [, , , , phonenumber] = menu.args.text.split("*");
                 if (menu.val != phonenumber) return 'sendCrypto.repeatNumber';
-
+                
+                console.log(phonenumber, menu.val);
                 return 'sendCrypto.authenticate';
             }
         }
     });
 
-    menu.state('sendCrypto.authenticate', authenticate("", "sendCrypto.amount", "sendCrypto.authenticateFailed"));
+    menu.state('sendCrypto.authenticate', authenticate("Enter your pin", "sendCrypto.amount", "sendCrypto.authenticateFailed"));
     menu.state('sendCrypto.authenticateFailed', authenticate("Incorrect pin. Try again", "sendCrypto.amount", "sendCrypto.authenticateFailed"));
 
     menu.state('sendCrypto.amount', {
         run: async () => {
             localeService.setLocale(await menu.session.get("lang") || "en");
-            const [, selectNumber, _amount, recipientPhonenumber] = menu.args.text.split("*");
+            console.log(menu.args.text.split("*"))
+            const [, , selectNumber, _amount, recipientPhonenumber] = menu.args.text.split("*");
             const tokenKey = TOKENKEY[parseInt(selectNumber) - 1];
             const token = TOKENS[tokenKey];
 
@@ -463,18 +472,18 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
             );
         },
         next: {
-            '*\\d': 'getTokenBalance.balance'
+            '*\\d': 'getTokenBalance.autheticate'
         }
     });
 
-    menu.state('getTokenBalance.autheticate', authenticate("", "getTokenBalance.balance", "getTokenBalance.autheticateFailed"));
+    menu.state('getTokenBalance.autheticate', authenticate("Enter your pin", "getTokenBalance.balance", "getTokenBalance.autheticateFailed"));
 
     menu.state('getTokenBalance.autheticateFailed', authenticate("Incorrect pin. Try again", "getTokenBalance.balance", "getTokenBalance.autheticateFailed"));
 
     menu.state('getTokenBalance.balance', {
         run: async () => {
             localeService.setLocale(await menu.session.get("lang") || "en");
-            const [, selectNumber,] = menu.args.text.split("*");
+            const [, , selectNumber] = menu.args.text.split("*");
             const tokenKey = TOKENKEY[parseInt(selectNumber) - 1];
 
             const token = TOKENS[tokenKey];
