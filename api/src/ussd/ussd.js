@@ -77,13 +77,14 @@ const makeMenu = ({ walletList, accountList, xendList } = {}) => {
                         \n3. Española
                         \n4. Français
                         \n5. Hausa
-                        \n6. 普通话`
+                        \n6. Hindi
+                        \n7. 普通话`
                 );
             },
             next: {
                 // using regex to match user input to next state
                 '*[1-6]': async () => {
-                    const languages = ["ar", "en", "es", "fr", "ha", "zn"];
+                    const languages = ["ar", "en", "es", "fr", "ha", "hi", "zn"];
 
                     const choice = languages[parseInt(menu.val) - 1];
 
